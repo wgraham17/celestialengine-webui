@@ -67,9 +67,11 @@ namespace CelestialEngine.Extensions.WebUI
             this.viewRect = new Rect(0, 0, browserWidth, browserHeight);
             this.bitmapFactory = new BitmapFactory();
 
-            ResourceHandlerFactory = new DefaultResourceHandlerFactory();
-            BrowserSettings = browserSettings ?? new BrowserSettings();
-            RequestContext = requestContext;
+            this.ResourceHandlerFactory = new DefaultResourceHandlerFactory();
+            this.BrowserSettings = browserSettings ?? new BrowserSettings();
+            this.RequestContext = requestContext;
+            this.LifeSpanHandler = new DisablePopupsLifeSpanHandler();
+            this.MenuHandler = new DisableContextMenuHandler();
 
             Cef.AddDisposable(this);
             this.Address = address;
@@ -321,6 +323,49 @@ namespace CelestialEngine.Extensions.WebUI
             this.ResourceHandlerFactory = null;
             this.GeolocationHandler = null;
             this.RenderProcessMessageHandler = null;
+        }
+    }
+
+    internal class DisablePopupsLifeSpanHandler : ILifeSpanHandler
+    {
+        public bool DoClose(IWebBrowser browserControl, IBrowser browser)
+        {
+            return false;
+        }
+
+        public void OnAfterCreated(IWebBrowser browserControl, IBrowser browser)
+        {
+        }
+
+        public void OnBeforeClose(IWebBrowser browserControl, IBrowser browser)
+        {
+        }
+
+        public bool OnBeforePopup(IWebBrowser browserControl, IBrowser browser, IFrame frame, string targetUrl, string targetFrameName, WindowOpenDisposition targetDisposition, bool userGesture, IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings, ref bool noJavascriptAccess, out IWebBrowser newBrowser)
+        {
+            newBrowser = null;
+            return true;
+        }
+    }
+
+    internal class DisableContextMenuHandler : IContextMenuHandler
+    {
+        public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
+        {
+        }
+
+        public bool OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
+        {
+            return true;
+        }
+
+        public void OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
+        {
+        }
+
+        public bool RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
+        {
+            return true;
         }
     }
 }
