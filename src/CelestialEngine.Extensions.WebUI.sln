@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelestialEngine.Extensions.WebUI", "CelestialEngine.Extensions.WebUI\CelestialEngine.Extensions.WebUI.csproj", "{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelestialEngine.Extensions.WebUI.Test", "..\test\CelestialEngine.Extensions.WebUI.Test\CelestialEngine.Extensions.WebUI.Test.csproj", "{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Debug|x86.ActiveCfg = Debug|x86
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Debug|x86.Build.0 = Debug|x86
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Release|x86.ActiveCfg = Release|Any CPU
+		{19C51D27-8996-4D15-AA81-9DF4A67DA6CF}.Release|x86.Build.0 = Release|Any CPU
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Debug|Any CPU.Build.0 = Debug|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Debug|x86.ActiveCfg = Debug|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Debug|x86.Build.0 = Debug|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Release|Any CPU.ActiveCfg = Release|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Release|x86.ActiveCfg = Release|x86
+		{E6D3A1C5-BF7C-4EDE-B3EC-443D4CFB7BB4}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
