@@ -132,6 +132,7 @@ namespace CelestialEngine.Extensions.WebUI
         public void InvokeRenderAsync(BitmapInfo bitmapInfo)
         {
             this.LastFrame = (Texture2DBitmapInfo)bitmapInfo;
+            this.LastFrame.SetDirty();
         }
 
         public void Load(string url)

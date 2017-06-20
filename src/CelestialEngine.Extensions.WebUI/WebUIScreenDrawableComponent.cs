@@ -4,6 +4,8 @@
     using CelestialEngine.Core;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using System;
+    using System.Linq;
 
     public class WebUIScreenDrawableComponent : ScreenDrawableComponent
     {
@@ -31,18 +33,19 @@
 
         public override void Draw(GameTime gameTime, ScreenSpriteBatch spriteBatch)
         {
-            if (this.browser.LastFrame != null)
+            if (this.browser.LastFrame != null && this.browser.LastFrame.GetDirtyStateDestructive())
             {
                 this.browser.LastFrame.CopyBitmapToTexture2D(this.browserTexture);
-                spriteBatch.Draw(this.browserTexture, this.position, null, Color.White, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None);
             }
+
+            spriteBatch.Draw(this.browserTexture, this.position, null, Color.White, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None);
         }
 
         public override void LoadContent(ExtendedContentManager contentManager)
         {
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://www.google.com/", browserSettings: this.browserSettings);
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://google.com/", browserSettings: this.browserSettings);
         }
 
         public override void Update(GameTime gameTime)
@@ -57,7 +60,8 @@
             // Input state detection
             var relativeMousePosition = state.CurrentMouseState.Position.ToVector2() - this.position;
             var didMouseLeave = (!browserRect.Contains(state.CurrentMouseState.Position.ToVector2()) && browserRect.Contains(state.LastMouseState.Position.ToVector2()));
-            var keysDown = state.CurrentKeyboardState.GetPressedKeys();
+            //var lastKeysDown = state.LastKeyboardState.GetPressedKeys();
+            //var keysDown = state.CurrentKeyboardState.GetPressedKeys();
             var eventFlags = this.GetEventFlags(state);
 
             if (state.LastMouseState.Position != state.CurrentMouseState.Position)
@@ -74,11 +78,54 @@
                 var delta = state.CurrentMouseState.ScrollWheelValue - state.LastMouseState.ScrollWheelValue;
                 host.SendMouseWheelEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, 0, delta, eventFlags);
             }
-        }
 
+            //var keysReleased = lastKeysDown.Except(keysDown);
+            //var keysPressed = keysDown.Except(lastKeysDown);
+            
+            //foreach (var key in keysReleased)
+            //{
+            //    host.SendKeyEvent(WM_KEYUP, (int)key, (int)eventFlags);
+            //}
+
+            //foreach (var key in keysPressed)
+            //{
+            //    host.SendKeyEvent(WM_KEYDOWN, (int)key, (int)eventFlags);
+            //}
+        }
+        
         public override void Dispose()
         {
             this.browser.Dispose();
+        }
+
+        protected virtual IntPtr SourceHook(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (handled)
+            {
+                return IntPtr.Zero;
+            }
+
+            switch ((WM)message)
+            {
+                case WM.SYSCHAR:
+                case WM.SYSKEYDOWN:
+                case WM.SYSKEYUP:
+                case WM.KEYDOWN:
+                case WM.KEYUP:
+                case WM.CHAR:
+                case WM.IME_CHAR:
+                    {
+                        if (this.browser != null)
+                        {
+                            this.browser.GetBrowser().GetHost().SendKeyEvent(message, wParam.ToInt32(), lParam.ToInt32());
+                            handled = true;
+                        }
+
+                        break;
+                    }
+            }
+
+            return IntPtr.Zero;
         }
 
         private CefEventFlags GetEventFlags(InputState state)
