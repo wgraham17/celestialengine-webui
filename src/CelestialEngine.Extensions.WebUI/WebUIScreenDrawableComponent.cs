@@ -42,7 +42,7 @@
         {
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://hulshofschmidt.files.wordpress.com/2011/05/color_test_pattern.jpg", browserSettings: this.browserSettings);
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://www.google.com/", browserSettings: this.browserSettings);
         }
 
         public override void Update(GameTime gameTime)
@@ -65,9 +65,14 @@
                 host.SendMouseMoveEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, didMouseLeave, eventFlags);
             }
 
+            this.HandleClickEvent(host, state.CurrentMouseState.LeftButton, state.LastMouseState.LeftButton, relativeMousePosition, MouseButtonType.Left, eventFlags);
+            this.HandleClickEvent(host, state.CurrentMouseState.MiddleButton, state.LastMouseState.MiddleButton, relativeMousePosition, MouseButtonType.Middle, eventFlags);
+            this.HandleClickEvent(host, state.CurrentMouseState.RightButton, state.LastMouseState.RightButton, relativeMousePosition, MouseButtonType.Right, eventFlags);
+
             if (state.IsScrollWheelChanged())
             {
-                host.SendMouseWheelEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, state.CurrentMouseState.ScrollWheelValue, 0, eventFlags);
+                var delta = state.CurrentMouseState.ScrollWheelValue - state.LastMouseState.ScrollWheelValue;
+                host.SendMouseWheelEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, 0, delta, eventFlags);
             }
         }
 
@@ -121,6 +126,18 @@
             }
 
             return eventFlags;
+        }
+
+        private void HandleClickEvent(IBrowserHost host, Microsoft.Xna.Framework.Input.ButtonState currentState, Microsoft.Xna.Framework.Input.ButtonState lastState, Vector2 relativeMousePosition, MouseButtonType mouseButtonType, CefEventFlags eventFlags)
+        {
+            if (lastState == Microsoft.Xna.Framework.Input.ButtonState.Released && currentState == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+            {
+                host.SendMouseClickEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, mouseButtonType, false, 1, eventFlags);
+            }
+            else if (lastState == Microsoft.Xna.Framework.Input.ButtonState.Pressed && currentState == Microsoft.Xna.Framework.Input.ButtonState.Released)
+            {
+                host.SendMouseClickEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, mouseButtonType, true, 1, eventFlags);
+            }
         }
     }
 }
