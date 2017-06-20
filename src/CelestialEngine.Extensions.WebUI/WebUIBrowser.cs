@@ -11,9 +11,9 @@ namespace CelestialEngine.Extensions.WebUI
         private bool browserCreated;
         private BitmapFactory bitmapFactory;
         private Rect viewRect;
-        public IBrowserAdapter BrowserAdapter => throw new NotImplementedException();
+        
+        #region Handlers
 
-        public bool HasParent { get; set; }
         public IDialogHandler DialogHandler { get; set; }
         public IRequestHandler RequestHandler { get; set; }
         public IDisplayHandler DisplayHandler { get; set; }
@@ -30,9 +30,21 @@ namespace CelestialEngine.Extensions.WebUI
         public IRenderProcessMessageHandler RenderProcessMessageHandler { get; set; }
         public IFindHandler FindHandler { get; set; }
 
+        #endregion
+
+        public IBrowserAdapter BrowserAdapter
+        {
+            get
+            {
+                return this.managedCefBrowserAdapter;
+            }
+        }
+
         public BrowserSettings BrowserSettings { get; private set; }
 
         public RequestContext RequestContext { get; private set; }
+
+        public bool HasParent { get; set; }
 
         public bool IsBrowserInitialized { get; private set; }
 
@@ -59,22 +71,25 @@ namespace CelestialEngine.Extensions.WebUI
 
         public WebUIBrowser(int browserWidth, int browserHeight, string address = "", BrowserSettings browserSettings = null, RequestContext requestContext = null)
         {
+            // Initialize CEF if needed. Really we should check if WebUISystem.Initialize has been called.
             if (!Cef.IsInitialized && !Cef.Initialize())
             {
                 throw new InvalidOperationException("Cef::Initialize() failed");
             }
 
             this.viewRect = new Rect(0, 0, browserWidth, browserHeight);
+
             this.bitmapFactory = new BitmapFactory();
 
             this.ResourceHandlerFactory = new DefaultResourceHandlerFactory();
-            this.BrowserSettings = browserSettings ?? new BrowserSettings();
-            this.RequestContext = requestContext;
             this.LifeSpanHandler = new DisablePopupsLifeSpanHandler();
             this.MenuHandler = new DisableContextMenuHandler();
 
-            Cef.AddDisposable(this);
             this.Address = address;
+            this.BrowserSettings = browserSettings ?? new BrowserSettings();
+            this.RequestContext = requestContext;
+
+            Cef.AddDisposable(this);
 
             managedCefBrowserAdapter = new ManagedCefBrowserAdapter(this, true);
             this.CreateBrowser(IntPtr.Zero);
@@ -103,30 +118,12 @@ namespace CelestialEngine.Extensions.WebUI
             GC.SuppressFinalize(this);
         }
 
-        public bool Focus()
-        {
-            return false;
-        }
-
         public IBrowser GetBrowser()
         {
             this.ThrowExceptionIfBrowserNotInitialized();
             return this.browser;
         }
-
-        public ScreenInfo GetScreenInfo()
-        {
-            return new ScreenInfo(1.0f);
-        }
-
-        public bool GetScreenPoint(int viewX, int viewY, out int screenX, out int screenY)
-        {
-            screenX = 0;
-            screenY = 0;
-
-            return false;
-        }
-
+        
         public ViewRect GetViewRect()
         {
             return new ViewRect(this.viewRect.Width, this.viewRect.Height);
@@ -236,6 +233,23 @@ namespace CelestialEngine.Extensions.WebUI
 
         #region Unimplemented Behavior
 
+        public bool Focus()
+        {
+            return false;
+        }
+        public ScreenInfo GetScreenInfo()
+        {
+            return new ScreenInfo(1.0f);
+        }
+
+        public bool GetScreenPoint(int viewX, int viewY, out int screenX, out int screenY)
+        {
+            screenX = 0;
+            screenY = 0;
+
+            return false;
+        }
+
         public void OnImeCompositionRangeChanged(Range selectedRange, Rect[] characterBounds)
         {
         }
@@ -324,48 +338,52 @@ namespace CelestialEngine.Extensions.WebUI
             this.GeolocationHandler = null;
             this.RenderProcessMessageHandler = null;
         }
-    }
 
-    internal class DisablePopupsLifeSpanHandler : ILifeSpanHandler
-    {
-        public bool DoClose(IWebBrowser browserControl, IBrowser browser)
+        #region Handler Classes
+
+        private class DisablePopupsLifeSpanHandler : ILifeSpanHandler
         {
-            return false;
+            public bool DoClose(IWebBrowser browserControl, IBrowser browser)
+            {
+                return false;
+            }
+
+            public void OnAfterCreated(IWebBrowser browserControl, IBrowser browser)
+            {
+            }
+
+            public void OnBeforeClose(IWebBrowser browserControl, IBrowser browser)
+            {
+            }
+
+            public bool OnBeforePopup(IWebBrowser browserControl, IBrowser browser, IFrame frame, string targetUrl, string targetFrameName, WindowOpenDisposition targetDisposition, bool userGesture, IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings, ref bool noJavascriptAccess, out IWebBrowser newBrowser)
+            {
+                newBrowser = null;
+                return true;
+            }
         }
 
-        public void OnAfterCreated(IWebBrowser browserControl, IBrowser browser)
+        private class DisableContextMenuHandler : IContextMenuHandler
         {
+            public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
+            {
+            }
+
+            public bool OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
+            {
+                return true;
+            }
+
+            public void OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
+            {
+            }
+
+            public bool RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
+            {
+                return true;
+            }
         }
 
-        public void OnBeforeClose(IWebBrowser browserControl, IBrowser browser)
-        {
-        }
-
-        public bool OnBeforePopup(IWebBrowser browserControl, IBrowser browser, IFrame frame, string targetUrl, string targetFrameName, WindowOpenDisposition targetDisposition, bool userGesture, IPopupFeatures popupFeatures, IWindowInfo windowInfo, IBrowserSettings browserSettings, ref bool noJavascriptAccess, out IWebBrowser newBrowser)
-        {
-            newBrowser = null;
-            return true;
-        }
-    }
-
-    internal class DisableContextMenuHandler : IContextMenuHandler
-    {
-        public void OnBeforeContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
-        {
-        }
-
-        public bool OnContextMenuCommand(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, CefMenuCommand commandId, CefEventFlags eventFlags)
-        {
-            return true;
-        }
-
-        public void OnContextMenuDismissed(IWebBrowser browserControl, IBrowser browser, IFrame frame)
-        {
-        }
-
-        public bool RunContextMenu(IWebBrowser browserControl, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model, IRunContextMenuCallback callback)
-        {
-            return true;
-        }
+        #endregion
     }
 }
