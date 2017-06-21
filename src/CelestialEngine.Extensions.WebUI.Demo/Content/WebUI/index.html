@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body style="background-color: transparent;color: white;">
+    <h1>Hello There!</h1>
+    <p>Last known FPS: <span id="lastKnownFPS">Unknown</span></p>
+    <button id="spawnLight">Spawn Light</button>
+    <script type="text/javascript">
+        window.webUICallbacks = window.webUICallbacks || {};
+        window.webUICallbacks["game:fps"] = function (data) {
+            document.getElementById("lastKnownFPS").innerText = data;
+        }
+        document.getElementById("spawnLight").onclick = function () {
+            webUIMessage.push("game:spawnLight");
+        }
+    </script>
+</body>
+</html>

@@ -211,7 +211,6 @@ namespace CelestialEngine.Extensions.WebUI
 
         public void OnFrameLoadEnd(FrameLoadEndEventArgs args)
         {
-            args.Frame.ExecuteJavaScriptAsync("window.webUICallbacks = window.webUICallbacks ?? [];");
             this.FrameLoadEnd?.Invoke(this, args);
         }
 
