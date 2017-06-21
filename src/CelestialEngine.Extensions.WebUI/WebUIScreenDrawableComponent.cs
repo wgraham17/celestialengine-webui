@@ -4,6 +4,7 @@
     using CelestialEngine.Core;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -78,10 +79,8 @@
 
         public void PushEventToBrowser(string name, string data)
         {
-            var jsName = name.Replace(@"\", @"\\").Replace("'", @"\'");
-            var jsData = data.Replace(@"\", @"\\").Replace("'", @"\'");
-
-            this.browser.GetMainFrame().ExecuteJavaScriptAsync($"if (typeof window.webUICallbacks !== 'undefined' && typeof window.webUICallbacks['{jsName}'] === 'function') window.webUICallbacks['{jsName}']('{jsData}');");
+            var container = JsonConvert.SerializeObject(new { name = name, data = data });
+            this.browser.GetMainFrame().ExecuteJavaScriptAsync($"var _msgobj = JSON.parse('{container}'); if (typeof window.webUICallbacks !== 'undefined' && typeof window.webUICallbacks[_msgobj.name] === 'function') window.webUICallbacks[_msgobj.name](_msgobj.data);");
         }
 
         public void RegisterEventCallback(string eventName, Action<string> handler)
