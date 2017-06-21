@@ -46,13 +46,13 @@
         {
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://google.com/", browserSettings: this.browserSettings);
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "webui://game/", browserSettings: this.browserSettings);
 
             this.pendingChars = new ConcurrentQueue<char>();
-            this.World.Game.Window.TextInput += Window_TextInput;
+            this.World.Game.Window.TextInput += GameWindowTextInput;
         }
 
-        private void Window_TextInput(object sender, TextInputEventArgs e)
+        private void GameWindowTextInput(object sender, TextInputEventArgs e)
         {
             this.pendingChars.Enqueue(e.Character);
         }
@@ -61,7 +61,13 @@
         {
         }
 
-        public void HandleInput(InputState state)
+        public override void Dispose()
+        {
+            this.World.Game.Window.TextInput -= this.GameWindowTextInput;
+            this.browser.Dispose();
+        }
+
+        private void HandleInput(InputState state)
         {
             var browserRect = new RectangleF(this.position.X, this.position.Y, this.browserWidth, this.browserHeight);
             var host = this.browser.GetBrowser().GetHost();
@@ -71,18 +77,23 @@
             var didMouseLeave = (!browserRect.Contains(state.CurrentMouseState.Position.ToVector2()) && browserRect.Contains(state.LastMouseState.Position.ToVector2()));
             var lastKeysDown = state.LastKeyboardState.GetPressedKeys();
             var keysDown = state.CurrentKeyboardState.GetPressedKeys();
-            var eventFlags = this.GetEventFlags(state);
 
+            // Create the bitflags for CEF events
+            var eventFlags = this.GetFullEventFlags(state);
+            var kbEventFlags = (int)this.GetKeyboardEventFlags(eventFlags);
+
+            // Mouse move event tracking
             if (state.LastMouseState.Position != state.CurrentMouseState.Position)
             {
                 host.SendMouseMoveEvent((int)relativeMousePosition.X, (int)relativeMousePosition.Y, didMouseLeave, eventFlags);
             }
 
+            // Click and mousewheel scroll tracking only if we're in bounds on the browser
             if (browserRect.Contains(state.CurrentMouseState.Position.ToVector2()))
             {
-                this.HandleClickEvent(host, state.CurrentMouseState.LeftButton, state.LastMouseState.LeftButton, relativeMousePosition, MouseButtonType.Left, eventFlags);
-                this.HandleClickEvent(host, state.CurrentMouseState.MiddleButton, state.LastMouseState.MiddleButton, relativeMousePosition, MouseButtonType.Middle, eventFlags);
-                this.HandleClickEvent(host, state.CurrentMouseState.RightButton, state.LastMouseState.RightButton, relativeMousePosition, MouseButtonType.Right, eventFlags);
+                this.DispatchClickEvent(host, state.CurrentMouseState.LeftButton, state.LastMouseState.LeftButton, relativeMousePosition, MouseButtonType.Left, eventFlags);
+                this.DispatchClickEvent(host, state.CurrentMouseState.MiddleButton, state.LastMouseState.MiddleButton, relativeMousePosition, MouseButtonType.Middle, eventFlags);
+                this.DispatchClickEvent(host, state.CurrentMouseState.RightButton, state.LastMouseState.RightButton, relativeMousePosition, MouseButtonType.Right, eventFlags);
 
                 if (state.IsScrollWheelChanged())
                 {
@@ -91,33 +102,28 @@
                 }
             }
 
+            // Compute WM_KEYDOWN and WM_KEYUP events
             var keysReleased = lastKeysDown.Except(keysDown);
             var keysPressed = keysDown.Except(lastKeysDown);
-            var kbFlags = (int)this.GetKeyboardEventFlags(state);
 
             foreach (var key in keysReleased)
             {
-                host.SendKeyEvent((int)WM.KEYUP, (int)key, kbFlags);
+                host.SendKeyEvent((int)WM.KEYUP, (int)key, kbEventFlags);
             }
 
             foreach (var key in keysPressed)
             {
-                host.SendKeyEvent((int)WM.KEYDOWN, (int)key, kbFlags);
+                host.SendKeyEvent((int)WM.KEYDOWN, (int)key, kbEventFlags);
             }
 
+            // Process any WM_CHAR events received from MonoGame
             while ((this.pendingChars.TryDequeue(out char c)))
             {
-                host.SendKeyEvent((int)WM.CHAR, (int)c, kbFlags);
+                host.SendKeyEvent((int)WM.CHAR, (int)c, kbEventFlags);
             }
         }
 
-        public override void Dispose()
-        {
-            this.World.Game.Window.TextInput -= Window_TextInput;
-            this.browser.Dispose();
-        }
-
-        private CefEventFlags GetEventFlags(InputState state)
+        private CefEventFlags GetFullEventFlags(InputState state)
         {
             CefEventFlags eventFlags = CefEventFlags.None;
 
@@ -164,29 +170,12 @@
             return eventFlags;
         }
 
-        private CefEventFlags GetKeyboardEventFlags(InputState state)
+        private CefEventFlags GetKeyboardEventFlags(CefEventFlags inputFlags)
         {
-            CefEventFlags eventFlags = CefEventFlags.None;
-
-            if (state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) || state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt))
-            {
-                eventFlags |= CefEventFlags.AltDown;
-            }
-            
-            if (state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) || state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl))
-            {
-                eventFlags |= CefEventFlags.ControlDown;
-            }
-
-            if (state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) || state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
-            {
-                eventFlags |= CefEventFlags.ShiftDown;
-            }
-            
-            return eventFlags;
+            return inputFlags & (CefEventFlags.AltDown | CefEventFlags.ControlDown | CefEventFlags.ShiftDown);
         }
 
-        private void HandleClickEvent(IBrowserHost host, Microsoft.Xna.Framework.Input.ButtonState currentState, Microsoft.Xna.Framework.Input.ButtonState lastState, Vector2 relativeMousePosition, MouseButtonType mouseButtonType, CefEventFlags eventFlags)
+        private void DispatchClickEvent(IBrowserHost host, Microsoft.Xna.Framework.Input.ButtonState currentState, Microsoft.Xna.Framework.Input.ButtonState lastState, Vector2 relativeMousePosition, MouseButtonType mouseButtonType, CefEventFlags eventFlags)
         {
             if (lastState == Microsoft.Xna.Framework.Input.ButtonState.Released && currentState == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
             {
