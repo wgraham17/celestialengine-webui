@@ -75,6 +75,8 @@
     <Compile Include="Texture2DBitmapInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebUIBrowser.cs" />
+    <Compile Include="WebUIMessage.cs" />
+    <Compile Include="WebUIMessageBusSink.cs" />
     <Compile Include="WebUIScreenDrawableComponent.cs" />
     <Compile Include="WebUISystem.cs" />
     <Compile Include="WM.cs" />

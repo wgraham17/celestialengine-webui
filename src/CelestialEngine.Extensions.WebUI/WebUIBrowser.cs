@@ -92,7 +92,6 @@ namespace CelestialEngine.Extensions.WebUI
             Cef.AddDisposable(this);
 
             managedCefBrowserAdapter = new ManagedCefBrowserAdapter(this, true);
-            this.CreateBrowser(IntPtr.Zero);
         }
 
         public void CreateBrowser(IntPtr windowHandle)
@@ -212,6 +211,7 @@ namespace CelestialEngine.Extensions.WebUI
 
         public void OnFrameLoadEnd(FrameLoadEndEventArgs args)
         {
+            args.Frame.ExecuteJavaScriptAsync("window.webUICallbacks = window.webUICallbacks ?? [];");
             this.FrameLoadEnd?.Invoke(this, args);
         }
 
