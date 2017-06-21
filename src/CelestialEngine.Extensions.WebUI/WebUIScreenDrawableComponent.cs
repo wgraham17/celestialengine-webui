@@ -4,6 +4,7 @@
     using CelestialEngine.Core;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using System.Collections.Concurrent;
     using System.Linq;
 
     public class WebUIScreenDrawableComponent : ScreenDrawableComponent
@@ -12,6 +13,7 @@
         private int browserHeight;
         private Vector2 position;
 
+        private ConcurrentQueue<char> pendingChars;
         private BrowserSettings browserSettings;
         private WebUIBrowser browser;
         private Texture2D browserTexture;
@@ -44,7 +46,15 @@
         {
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "webui://game/", browserSettings: this.browserSettings);
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "https://google.com/", browserSettings: this.browserSettings);
+
+            this.pendingChars = new ConcurrentQueue<char>();
+            this.World.Game.Window.TextInput += Window_TextInput;
+        }
+
+        private void Window_TextInput(object sender, TextInputEventArgs e)
+        {
+            this.pendingChars.Enqueue(e.Character);
         }
 
         public override void Update(GameTime gameTime)
@@ -83,26 +93,27 @@
 
             var keysReleased = lastKeysDown.Except(keysDown);
             var keysPressed = keysDown.Except(lastKeysDown);
+            var kbFlags = (int)this.GetKeyboardEventFlags(state);
 
             foreach (var key in keysReleased)
             {
-                host.SendKeyEvent((int)WM.KEYUP, (int)key, (int)this.GetKeyboardEventFlags(state));
+                host.SendKeyEvent((int)WM.KEYUP, (int)key, kbFlags);
             }
 
             foreach (var key in keysPressed)
             {
-                host.SendKeyEvent((int)WM.KEYDOWN, (int)key, (int)this.GetKeyboardEventFlags(state));
+                host.SendKeyEvent((int)WM.KEYDOWN, (int)key, kbFlags);
+            }
 
-                // We need a better way to dispatch from WM_KEYDOWN to WM_CHAR...
-                if ((key >= Microsoft.Xna.Framework.Input.Keys.A && key <= Microsoft.Xna.Framework.Input.Keys.Z) || (key >= Microsoft.Xna.Framework.Input.Keys.D0 && key <= Microsoft.Xna.Framework.Input.Keys.D9))
-                {
-                    host.SendKeyEvent((int)WM.CHAR, (int)key, (int)this.GetKeyboardEventFlags(state));
-                }
+            while ((this.pendingChars.TryDequeue(out char c)))
+            {
+                host.SendKeyEvent((int)WM.CHAR, (int)c, kbFlags);
             }
         }
 
         public override void Dispose()
         {
+            this.World.Game.Window.TextInput -= Window_TextInput;
             this.browser.Dispose();
         }
 
