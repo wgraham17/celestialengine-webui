@@ -35,7 +35,7 @@
         protected override void Initialize()
         {
             // Initialize the camera and/or input manager as needed
-            WebUISystem.Initialize();
+            WebUISystem.Initialize(this.Content.RootDirectory);
             base.Initialize();
         }
 

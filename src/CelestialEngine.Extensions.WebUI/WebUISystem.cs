@@ -1,4 +1,6 @@
 ﻿using CefSharp;
+using CefSharp.SchemeHandler;
+using System.IO;
 
 namespace CelestialEngine.Extensions.WebUI
 {
@@ -10,7 +12,7 @@ namespace CelestialEngine.Extensions.WebUI
         ///     you call them on different threads, your application will hang.
         ///    See the documentation for WebUISystem.Shutdown() for more details.
         /// </summary>
-        public static void Initialize()
+        public static void Initialize(string contentRootDirectory)
         {
             var settings = new CefSettings();
 
@@ -21,7 +23,13 @@ namespace CelestialEngine.Extensions.WebUI
             //settings.CefCommandLineArgs.Add("disable-pdf-extension", "1");
             //settings.CefCommandLineArgs.Add("disable-plugins-discovery", "1");
             //settings.CefCommandLineArgs.Add("disable-gpu-vsync", "1");
-
+            settings.RegisterScheme(new CefCustomScheme()
+            {
+                SchemeName = "webui",
+                SchemeHandlerFactory = new FolderSchemeHandlerFactory(rootFolder: Path.Combine(contentRootDirectory, "Content\\WebUI"),
+                                                                        schemeName: "webui",
+                                                                        hostName: null)
+            });
             settings.WindowlessRenderingEnabled = true;
 
             Cef.Initialize(settings);

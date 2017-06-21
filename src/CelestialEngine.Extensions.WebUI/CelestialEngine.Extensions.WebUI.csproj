@@ -72,7 +72,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitmapFactory.cs" />
-    <Compile Include="NativeImports.cs" />
     <Compile Include="Texture2DBitmapInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebUIBrowser.cs" />
