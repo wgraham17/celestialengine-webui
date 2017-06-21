@@ -4,7 +4,9 @@
     using CelestialEngine.Core;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Linq;
 
     public class WebUIScreenDrawableComponent : ScreenDrawableComponent
@@ -16,8 +18,10 @@
         private ConcurrentQueue<char> pendingChars;
         private BrowserSettings browserSettings;
         private WebUIBrowser browser;
+        private WebUIMessageBusSink messageBusSink;
         private Texture2D browserTexture;
         private ConditionalInputBinding inputBindingRegistration;
+        private Dictionary<string, Action<string>> messageCallbacks;
 
         public WebUIScreenDrawableComponent(World world, int browserWidth, int browserHeight, Vector2 position, int browserFps = 30)
             : base(world)
@@ -30,6 +34,10 @@
                 OffScreenTransparentBackground = true,
                 WindowlessFrameRate = browserFps
             };
+
+            this.messageBusSink = new WebUIMessageBusSink();
+            this.pendingChars = new ConcurrentQueue<char>();
+            this.messageCallbacks = new Dictionary<string, Action<string>>();
         }
 
         public override void Draw(GameTime gameTime, ScreenSpriteBatch spriteBatch)
@@ -47,8 +55,9 @@
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
             this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "webui://game/", browserSettings: this.browserSettings);
+            this.browser.RegisterAsyncJsObject("webUiMessageBus", this.messageBusSink);
+            this.browser.CreateBrowser(IntPtr.Zero);
 
-            this.pendingChars = new ConcurrentQueue<char>();
             this.World.Game.Window.TextInput += GameWindowTextInput;
         }
 
@@ -59,6 +68,30 @@
 
         public override void Update(GameTime gameTime)
         {
+            var pendingMessages = this.messageBusSink.GetAllAndFlush();
+
+            foreach (var message in pendingMessages)
+            {
+                this.messageCallbacks[message.Name]?.Invoke(message.Data);
+            }
+        }
+
+        public void PushEventToBrowser(string name, string data)
+        {
+            var jsName = name.Replace(@"\", @"\\").Replace("'", @"\'");
+            var jsData = data.Replace(@"\", @"\\").Replace("'", @"\'");
+
+            this.browser.GetMainFrame().ExecuteJavaScriptAsync($"if (typeof window.webUICallbacks !== 'undefined' && typeof window.webUICallbacks['{jsName}'] === 'function') window.webUICallbacks['{jsName}']('{jsData}');");
+        }
+
+        public void RegisterEventCallback(string eventName, Action<string> handler)
+        {
+            this.messageCallbacks[eventName] = handler;
+        }
+
+        public void UnregisterEventCallback(string eventName)
+        {
+            this.messageCallbacks.Remove(eventName);
         }
 
         public override void Dispose()
