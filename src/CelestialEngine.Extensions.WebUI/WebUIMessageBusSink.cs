@@ -12,7 +12,12 @@
             this.pendingMessages = new ConcurrentQueue<WebUIMessage>();
         }
 
-        public void PushMessageToGame(string name, string data)
+        public void Push(string name)
+        {
+            this.Push(name, null);
+        }
+
+        public void Push(string name, string data)
         {
             this.pendingMessages.Enqueue(new WebUIMessage() { Name = name, Data = data });
         }

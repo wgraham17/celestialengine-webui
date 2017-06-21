@@ -56,7 +56,7 @@
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
             this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "webui://game/", browserSettings: this.browserSettings);
-            this.browser.RegisterAsyncJsObject("webUiMessageBus", this.messageBusSink);
+            this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
             this.browser.CreateBrowser(IntPtr.Zero);
 
             this.World.Game.Window.TextInput += GameWindowTextInput;
@@ -152,6 +152,11 @@
             while ((this.pendingChars.TryDequeue(out char c)))
             {
                 host.SendKeyEvent((int)WM.CHAR, (int)c, kbEventFlags);
+            }
+
+            if (state.IsFirstKeyPress(Microsoft.Xna.Framework.Input.Keys.F12))
+            {
+                host.ShowDevTools();
             }
         }
 
