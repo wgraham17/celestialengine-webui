@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata minClientVersion="3.3">
+    <id>$id$</id>
+    <version>$version$</version>
+    <description>A screen component for Celestial Engine to render UI elements using HTML and CSS by leveraging Chromium Embedded Framework. Currently only supported on Windows.</description>
+    <authors>wgraham17</authors>
+    <title>Celestial Engine WebUI Extension (.NET Full 4.5)</title>
+    <projectUrl>https://github.com/wgraham17/celestialengine-webui</projectUrl>
+    <licenseUrl>https://github.com/wgraham17/celestialengine-webui/blob/master/LICENSE</licenseUrl>
+    <tags>monogame game engine xna 2d deferred rendering</tags>
+    <dependencies>
+        <dependency id="CefSharp.Common" version="57.0.0" />
+        <dependency id="CelestialEngine.Net45" version="0.1.5" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="readme.txt" target="" />
+  </files>
+</package>

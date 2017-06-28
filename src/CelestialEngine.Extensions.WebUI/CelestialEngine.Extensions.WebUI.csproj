@@ -12,6 +12,7 @@
     <AssemblyName>CelestialEngine.Extensions.WebUI</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -23,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -89,15 +91,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\Shaders\Core\DebugTargets.fx" />
-    <Content Include="Content\Shaders\Core\MergeTargets.fx" />
-    <Content Include="Content\Shaders\Core\NormalMap.fx" />
-    <Content Include="Content\Shaders\Core\OptionsMapFlags.fx" />
-    <Content Include="Content\Shaders\Core\ShadowMap.fx" />
-    <Content Include="Content\Shaders\Lights\AmbientLight.fx" />
-    <Content Include="Content\Shaders\Lights\ConeLight.fx" />
-    <Content Include="Content\Shaders\Lights\PointLight.fx" />
-    <Content Include="Content\Shaders\Simple\InvertColors.fx" />
     <Content Include="readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
