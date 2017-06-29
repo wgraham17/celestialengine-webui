@@ -1,0 +1,1 @@
+nuget pack -Prop "Platform=x86"

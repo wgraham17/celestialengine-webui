@@ -41,6 +41,8 @@
             this.messageBusSink = new WebUIMessageBusSink();
             this.pendingChars = new ConcurrentQueue<char>();
             this.messageCallbacks = new Dictionary<string, Action<string>>();
+
+            this.World.Game.Window.TextInput += GameWindowTextInput;
         }
 
         public override void Draw(GameTime gameTime, ScreenSpriteBatch spriteBatch)
@@ -60,8 +62,6 @@
             this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
             this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
             this.browser.CreateBrowser(IntPtr.Zero);
-
-            this.World.Game.Window.TextInput += GameWindowTextInput;
         }
 
         private void GameWindowTextInput(object sender, TextInputEventArgs e)
