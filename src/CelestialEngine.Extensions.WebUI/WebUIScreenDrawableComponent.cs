@@ -15,6 +15,7 @@
         private int browserWidth;
         private int browserHeight;
         private Vector2 position;
+        private string startPage;
 
         private ConcurrentQueue<char> pendingChars;
         private BrowserSettings browserSettings;
@@ -24,12 +25,13 @@
         private ConditionalInputBinding inputBindingRegistration;
         private Dictionary<string, Action<string>> messageCallbacks;
 
-        public WebUIScreenDrawableComponent(World world, int browserWidth, int browserHeight, Vector2 position, int browserFps = 30)
+        public WebUIScreenDrawableComponent(World world, int browserWidth, int browserHeight, Vector2 position, int browserFps = 30, string startPage = "index.html")
             : base(world)
         {
             this.position = position;
             this.browserWidth = browserWidth;
             this.browserHeight = browserHeight;
+            this.startPage = startPage;
             this.browserSettings = new BrowserSettings()
             {
                 OffScreenTransparentBackground = true,
@@ -55,7 +57,7 @@
         {
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, "webui://game/", browserSettings: this.browserSettings);
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
             this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
             this.browser.CreateBrowser(IntPtr.Zero);
 
@@ -77,7 +79,7 @@
             }
         }
 
-        public void PushEventToBrowser(string name, string data)
+        public void PushEventToBrowser<T>(string name, T data)
         {
             var container = JsonConvert.SerializeObject(new { name = name, data = data });
             this.browser.GetMainFrame().ExecuteJavaScriptAsync($"var _msgobj = JSON.parse('{container}'); if (typeof window.webUICallbacks !== 'undefined' && typeof window.webUICallbacks[_msgobj.name] === 'function') window.webUICallbacks[_msgobj.name](_msgobj.data);");
