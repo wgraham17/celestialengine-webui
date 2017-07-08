@@ -24,6 +24,7 @@
         private Texture2D browserTexture;
         private ConditionalInputBinding inputBindingRegistration;
         private Dictionary<string, Action<string>> messageCallbacks;
+        private bool canHandleInput;
 
         public WebUIScreenDrawableComponent(World world, int browserWidth, int browserHeight, Vector2 position, int browserFps = 30, string startPage = "index.html")
             : base(world)
@@ -42,7 +43,15 @@
             this.pendingChars = new ConcurrentQueue<char>();
             this.messageCallbacks = new Dictionary<string, Action<string>>();
 
+            this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.World.Game.Window.TextInput += GameWindowTextInput;
+
+            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
+            this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
+            this.browser.CreateBrowser(IntPtr.Zero, () =>
+            {
+                this.canHandleInput = true;
+            });
         }
 
         public override void Draw(GameTime gameTime, ScreenSpriteBatch spriteBatch)
@@ -57,16 +66,15 @@
 
         public override void LoadContent(ExtendedContentManager contentManager)
         {
-            this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.browserTexture = new Texture2D(this.World.Game.GraphicsDevice, this.browserWidth, this.browserHeight, false, SurfaceFormat.Bgra32);
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
-            this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
-            this.browser.CreateBrowser(IntPtr.Zero);
         }
 
         private void GameWindowTextInput(object sender, TextInputEventArgs e)
         {
-            this.pendingChars.Enqueue(e.Character);
+            if (!char.IsControl(e.Character))
+            {
+                this.pendingChars.Enqueue(e.Character);
+            }
         }
 
         public override void Update(GameTime gameTime)
@@ -103,6 +111,11 @@
 
         private void HandleInput(InputState state)
         {
+            if (!this.canHandleInput || !this.Enabled)
+            {
+                return;
+            }
+
             var browserRect = new RectangleF(this.position.X, this.position.Y, this.browserWidth, this.browserHeight);
             var host = this.browser.GetBrowser().GetHost();
 

@@ -11,6 +11,7 @@ namespace CelestialEngine.Extensions.WebUI
         private bool browserCreated;
         private BitmapFactory bitmapFactory;
         private Rect viewRect;
+        private Action createCallback;
         
         #region Handlers
 
@@ -94,7 +95,7 @@ namespace CelestialEngine.Extensions.WebUI
             managedCefBrowserAdapter = new ManagedCefBrowserAdapter(this, true);
         }
 
-        public void CreateBrowser(IntPtr windowHandle)
+        public void CreateBrowser(IntPtr windowHandle, Action createCallback)
         {
             if (this.browserCreated)
             {
@@ -149,6 +150,7 @@ namespace CelestialEngine.Extensions.WebUI
             this.browser = browser;
 
             this.IsBrowserInitialized = true;
+            this.createCallback?.Invoke();
         }
 
         public void RegisterAsyncJsObject(string name, object objectToBind, BindingOptions options = null)
