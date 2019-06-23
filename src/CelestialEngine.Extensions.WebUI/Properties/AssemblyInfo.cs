@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("CelestialEngine.Extensions.WebUI")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCopyright("Copyright © Will Graham 2017 - 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,5 +33,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyInformationalVersion("0.1.6.7")]
-[assembly: AssemblyVersion("0.1.6.7")]
-[assembly: AssemblyFileVersion("0.1.6.7")]
+[assembly: AssemblyVersion("0.1.8")]
+[assembly: AssemblyFileVersion("0.1.8")]
