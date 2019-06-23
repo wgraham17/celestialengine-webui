@@ -25,6 +25,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Core/MergeTargets.fx
 
+#begin Shaders/Core/NormalMap.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Core/NormalMap.fx
+
 #begin Shaders/Core/OptionsMapFlags.fx
 /importer:EffectImporter
 /processor:EffectProcessor

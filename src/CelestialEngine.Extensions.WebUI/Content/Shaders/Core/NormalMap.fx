@@ -1,26 +1,15 @@
-// -----------------------------------------------------------------------
-// <copyright file="OptionsMapFlags.fx" company="">
-// Copyright (C) 2012 Matthew Razza
+﻿// -----------------------------------------------------------------------
+// <copyright file="NormalMap.fx" company="">
+// Copyright (C) Matthew Razza
 // </copyright>
 // -----------------------------------------------------------------------
 
 /// <summary>
-/// This shader renders the options map.
+/// This shader renders the normal map.
 /// </summary>
-/// <remarks>
-/// The bits in the options map are distributed as follows:
-/// Bit Number     |    1    2    3    4    5    6    7    8
-/// ------------------------------------------------------------
-/// RED Channel    | [---------Sprite Render Options----------]    Bits 1-8
-/// GREEN Channel  | [------------Specular Reflect------------]    Bits 1-8
-/// BLUE Channel   | [---------------Layer Depth--------------]    Bits 1-8
-/// ALPHA Channel  |               The Alpha Channel
-/// </remarks>
-float pixelOptions;
-float specularReflectivity;
+float3x3 normalTransformationMatrix;
 float4x4 viewProjection;
 float2 cameraPosition;
-float layerDepth;
 
 texture spriteTexture;
 sampler spriteTextureSample = sampler_state
@@ -58,21 +47,12 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR
 {
     float4 pixelColor = tex2D(spriteTextureSample, input.TexCoord);
-    float redChannel = pixelOptions;
-    float greenChannel = specularReflectivity;
-    float blueChannel = layerDepth;
+    float3 normalVector = mul(2.0f * pixelColor.rgb - 1.0, normalTransformationMatrix);
 
-    if (pixelColor.a == 0.0f)
-    {
-        redChannel = 0.0f;
-        greenChannel = 0.0f;
-        blueChannel = 0.0f;
-    }
-
-    return float4(redChannel, greenChannel, blueChannel, pixelColor.a);
+    return float4((normalVector + 1.0) / 2.0f, pixelColor.a);
 }
 
-technique ApplyFlagsToOptionsMap
+technique RenderNormalMap
 {
     pass MainPass
     {

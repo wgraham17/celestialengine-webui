@@ -12,7 +12,7 @@
             this.pendingMessages = new ConcurrentQueue<WebUIMessage>();
         }
 
-        public void Trigger(string name)
+        public void Push(string name)
         {
             this.Push(name, null);
         }

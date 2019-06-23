@@ -14,9 +14,10 @@
         window.webUICallbacks["game:fps"] = function (data) {
             document.getElementById("lastKnownFPS").innerText = data;
         }
-        document.getElementById("spawnLight").onclick = function () {
-            webUIMessage.push("game:spawnLight");
-        }
+        document.getElementById("spawnLight").onclick = async function () {
+            await CefSharp.BindObjectAsync("webUIMessage");
+            await webUIMessage.push("game:spawnLight");
+        };
     </script>
 </body>
 </html>

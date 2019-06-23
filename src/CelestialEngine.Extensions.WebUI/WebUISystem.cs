@@ -1,4 +1,5 @@
 ﻿using CefSharp;
+using CefSharp.OffScreen;
 using CefSharp.SchemeHandler;
 using System.IO;
 
@@ -16,13 +17,13 @@ namespace CelestialEngine.Extensions.WebUI
         {
             var settings = new CefSettings();
 
-            settings.SetOffScreenRenderingBestPerformanceArgs();
             //settings.UserAgent = "Mozilla/5.0 Chrome/57.0.2987.133 CelestialEngine-WebUI/1.0";
             //settings.CefCommandLineArgs.Add("renderer-process-limit", "1");
             //settings.CefCommandLineArgs.Add("disable-extensions", "1");
             //settings.CefCommandLineArgs.Add("disable-pdf-extension", "1");
             //settings.CefCommandLineArgs.Add("disable-plugins-discovery", "1");
             //settings.CefCommandLineArgs.Add("disable-gpu-vsync", "1");
+
             settings.RegisterScheme(new CefCustomScheme()
             {
                 SchemeName = "webui",

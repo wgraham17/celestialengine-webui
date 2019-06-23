@@ -66,8 +66,6 @@
                 Power = 0.25f,
                 Range = this.prng.Next(300, 500) / 100.0f,
                 SpecularStrength = 2.75f,
-                MinShadowBlurDistance = .5f,
-                MaxShadowBlurDistance = 2f,
                 CastsShadows = true,
                 LayerDepth = 2
             };
@@ -114,8 +112,6 @@
                 Power = 0.25f,
                 Range = this.prng.Next(300, 500) / 100.0f,
                 SpecularStrength = 2.75f,
-                MinShadowBlurDistance = .5f,
-                MaxShadowBlurDistance = 2f,
                 CastsShadows = true,
                 LayerDepth = 2
             };

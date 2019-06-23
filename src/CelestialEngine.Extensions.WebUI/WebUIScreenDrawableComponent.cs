@@ -1,6 +1,7 @@
 ﻿namespace CelestialEngine.Extensions.WebUI
 {
     using CefSharp;
+    using CefSharp.OffScreen;
     using CelestialEngine.Core;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
@@ -19,7 +20,8 @@
 
         private ConcurrentQueue<char> pendingChars;
         private BrowserSettings browserSettings;
-        private WebUIBrowser browser;
+        private ChromiumWebBrowser browser;
+        private BitmapRenderHandler renderHandler;
         private WebUIMessageBusSink messageBusSink;
         private Texture2D browserTexture;
         private ConditionalInputBinding inputBindingRegistration;
@@ -35,7 +37,7 @@
             this.startPage = startPage;
             this.browserSettings = new BrowserSettings()
             {
-                OffScreenTransparentBackground = true,
+                BackgroundColor = 0,
                 WindowlessFrameRate = browserFps
             };
 
@@ -46,19 +48,26 @@
             this.inputBindingRegistration = ((BaseGame)this.World.Game).InputManager.AddBinding((s) => this.HandleInput(s));
             this.World.Game.Window.TextInput += GameWindowTextInput;
 
-            this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
-            this.browser.RegisterAsyncJsObject("webUIMessage", this.messageBusSink);
-            this.browser.CreateBrowser(IntPtr.Zero, () =>
+            //this.browser = new WebUIBrowser(this.browserWidth, this.browserHeight, $"webui://game/{this.startPage}", browserSettings: this.browserSettings);
+            this.renderHandler = new BitmapRenderHandler(this.browserWidth, this.browserHeight);
+            this.browser = new ChromiumWebBrowser($"webui://game/{this.startPage}", this.browserSettings, null, false)
             {
-                this.canHandleInput = true;
-            });
+                MenuHandler = new NoMenuHandler(),
+                RenderHandler = this.renderHandler
+            };
+            this.browser.JavascriptObjectRepository.Register("webUIMessage", this.messageBusSink, true);
+            this.browser.CreateBrowser(new WindowInfo() { Width = this.browserWidth, Height = this.browserHeight, WindowHandle = IntPtr.Zero, WindowlessRenderingEnabled = true});
+            this.canHandleInput = true;
         }
 
         public override void Draw(GameTime gameTime, ScreenSpriteBatch spriteBatch)
         {
-            if (this.browser.LastFrame != null && this.browser.LastFrame.GetDirtyStateDestructive())
+            if (this.renderHandler.GetDirtyStateDestructive())
             {
-                this.browser.LastFrame.CopyBitmapToTexture2D(this.browserTexture);
+                lock (this.renderHandler.BitmapLock)
+                {
+                    this.browserTexture.SetData(this.renderHandler.BitmapBuffer.Buffer);
+                }
             }
 
             spriteBatch.Draw(this.browserTexture, this.position, null, Color.White, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None);

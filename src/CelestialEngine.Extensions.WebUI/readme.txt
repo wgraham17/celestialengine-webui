@@ -19,6 +19,8 @@ Currently requires *VC++ 2013 x86* as a runtime dependency as this relies on [Ce
 
 `index.html` is the default page loaded by WebUI.  You can load other assets (such as images, Javascript, and CSS) from this folder as well. Remote sources are available as well.
 
+To disable F12 DevTools, remove `devtools_resources.pak` from your game binary folder. A better solution is coming.
+
 ### Sending data to the browser
 Call `PushEventToBrowser(string name, string data)` on the WebUI Screen Drawable Component.  Complex data can be serialized to JSON if needed.
 
@@ -35,7 +37,8 @@ Then, you can create a handler for data by adding to the `webUICallbacks` object
 
 
 ### Sending data to the game
-Call `webUIMessage.push(name, data)` from Javascript. Data is optional.
+1. Call `await CefSharp.BindObjectAsync("webUIMessage");`. This can either be once on page load (and state managed by the JavaScript app) or multiple times.
+2. Call `await webUIMessage.push(name, data)` from Javascript. `data` is optional.
 
 ### Receiving data in the game
 Call `RegisterEventCallback(string name, Action<string> handler)` on the WebUI Screen Drawable Component to handle events from the browser.
